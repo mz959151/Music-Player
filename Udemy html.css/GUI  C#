@@ -1,0 +1,427 @@
+private void buttonLogin_Click(object sender, EventArgs e)
+        {
+
+            CONNECT conn = new CONNECT();
+            DataTable table = new DataTable();
+            MySqlDataAdapter adapter = new MySqlDataAdapter();
+            MySqlCommand command = new MySqlCommand();
+            String query = "SELECT * FROM `users` WHERE `username`=@usn AND `password`=@pass";
+
+            command.CommandText = query;
+            command.Connection = conn.getConnection();
+
+            command.Parameters.Add("@usn", MySqlDbType.VarChar).Value = textBoxUsername.Text;
+            command.Parameters.Add("@pass", MySqlDbType.VarChar).Value = textBoxPassword.Text;
+
+            adapter.SelectCommand = command;
+            adapter.Fill(table);
+
+            // if the username and the password exists
+            if(table.Rows.Count > 0)
+            {
+                // show the main form
+                this.Hide();
+                Main_Form mform = new Main_Form();
+                mform.Show();
+            }
+            else
+            {
+                if(textBoxUsername.Text.Trim().Equals(""))
+                {
+                    MessageBox.Show("Enter Your Username to Login", "Empty Username", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else if (textBoxPassword.Text.Trim().Equals(""))
+                {
+                    MessageBox.Show("Enter Your Password to Login", "Empty Password", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else
+                {
+                    MessageBox.Show("This Username Or Password Doesn't Exists", "Wrong Data", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+
+        }
+
+ private void Main_Form_FormClosing(object sender, FormClosingEventArgs e)
+
+        {
+
+            Application.Exit();
+
+        }
+
+
+
+        private void manageClientsToolStripMenuItem_Click(object sender, EventArgs e)
+
+        {
+
+            ManageClientsForm manageCF = new ManageClientsForm();
+
+            manageCF.ShowDialog();
+
+        }
+
+
+
+        private void manageRoomsToolStripMenuItem_Click(object sender, EventArgs e)
+
+        {
+
+            ManageRoomsForm manageRF = new ManageRoomsForm();
+
+            manageRF.ShowDialog();
+
+        }
+
+
+
+        private void manageReservationsToolStripMenuItem_Click(object sender, EventArgs e)
+
+        {
+
+            ManageReservationsForm manageRSVF = new ManageReservationsForm();
+
+            manageRSVF.ShowDialog();
+
+        }
+
+    }
+
+
+
+private void ManageClientsForm_Load(object sender, EventArgs e)
+        {
+            dataGridView1.DataSource = client.getClients();
+
+        }
+
+
+private void buttonAddClient_Click(object sender, EventArgs e)
+        {
+            String fname = textBoxFirstName.Text;
+            String lname = textBoxLastName.Text;
+            String phone = textBoxPhone.Text;
+            String country = textBoxCountry.Text;
+
+            if (fname.Trim().Equals("") || lname.Trim().Equals("") || phone.Trim().Equals(""))
+            {
+                MessageBox.Show("Required Fields - First & Last Name + Phone Number", "Empty Fields", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                Boolean insertClient = client.insertClient(fname, lname, phone, country);
+
+                if (insertClient)
+                {
+                    dataGridView1.DataSource = client.getClients();
+                    MessageBox.Show("New Client Inserted Successfuly", "Add Client", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show("ERROR - Client Not Inserted", "Add Client", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+            }
+
+        }
+
+
+private void buttonEditClient_Click(object sender, EventArgs e)
+        {
+            int id;
+            String fname = textBoxFirstName.Text;
+            String lname = textBoxLastName.Text;
+            String phone = textBoxPhone.Text;
+            String country = textBoxCountry.Text;
+
+            try
+            {
+                id = Convert.ToInt32(textBoxID.Text);
+
+                if (fname.Trim().Equals("") || lname.Trim().Equals("") || phone.Trim().Equals(""))
+                {
+                    MessageBox.Show("Required Fields - First & Last Name + Phone Number", "Empty Fields", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else
+                {
+                    Boolean insertClient = client.editClient(id, fname, lname, phone, country);
+
+                    if (insertClient)
+                    {
+                        dataGridView1.DataSource = client.getClients();
+                        MessageBox.Show("New Client Updated Successfuly", "Edit Client", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("ERROR - Client Not Updated", "Edit Client", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+
+            }catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "ID Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+
+        }
+
+
+private void buttonRemoveClient_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int id = Convert.ToInt32(textBoxID.Text);
+
+                if(client.removeClient(id))
+                {
+                    dataGridView1.DataSource = client.getClients();
+                    MessageBox.Show("Client Deleted Successfuly", "Delete Client", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // you can clear all textboxes after the delete if you want
+                    // by calling the clear button
+                    buttonClear.PerformClick();
+                   
+                }
+                else
+                {
+                    MessageBox.Show("ERROR - Client Not Deleted", "Delete Client", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+            }catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "ID Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+- Clear All TextBoxes Button
+
+        private void buttonClear_Click(object sender, EventArgs e)
+        {
+            textBoxID.Text = "";
+            textBoxFirstName.Text = "";
+            textBoxLastName.Text = "";
+            textBoxPhone.Text = "";
+            textBoxCountry.Text = "";
+        }
+
+
+
+
+
+        private void buttonAddRoom_Click(object sender, EventArgs e)
+        {
+            
+            int type = Convert.ToInt32(comboBoxRoomType.SelectedValue.ToString());
+            string phone = textBoxPhone.Text;
+            string free = "";
+            
+            try
+            {
+                int number = Convert.ToInt32(textBoxNumber.Text);
+                if (radioButtonYES.Checked)
+                {
+                    free = "Yes";
+                }
+                else if (radioButtonNO.Checked)
+                {
+                    free = "No";
+                }
+
+                if (room.addRoom(number, type, phone, free))
+                {
+                    dataGridView1.DataSource = room.getRooms();
+                    MessageBox.Show("Room Added Successfully", "Add Room", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Room Not Added", "Add Room", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Room Number Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            
+        }
+
+- Edit The Selected Room Button
+
+        private void buttonEditRoom_Click(object sender, EventArgs e)
+        {
+            
+            int type = Convert.ToInt32(comboBoxRoomType.SelectedValue.ToString());
+            String phone = textBoxPhone.Text;
+            String free = "";
+
+            try
+            {
+                int number = Convert.ToInt32(textBoxNumber.Text);
+                if (radioButtonYES.Checked)
+                {
+                    free = "Yes";
+                }
+                else if (radioButtonNO.Checked)
+                {
+                    free = "No";
+                }
+
+                if (room.editRoom(number, type, phone, free))
+                {
+                    dataGridView1.DataSource = room.getRooms();
+                    MessageBox.Show("Room Data Updated", "Edit Room", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Room Data NOT Updated", "Edit Room", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
+            }catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Room Number Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
+
+- Delete The Selected Room Button
+
+        private void buttonRemoveRoom_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int number = Convert.ToInt32(textBoxNumber.Text);
+
+                if (room.removeRoom(number))
+                {
+                    dataGridView1.DataSource = room.getRooms();
+                    MessageBox.Show("Room Data Deleted", "Remove Room", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Room Data NOT Deleted", "Remove Room", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Room Number Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
+
+
+
+private void buttonAddReserv_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int clientID = Convert.ToInt32(textBoxClientID.Text);
+                int roomNumber = Convert.ToInt32(comboBoxRoomNumber.SelectedValue);
+                DateTime dateIn = dateTimePickerIN.Value;
+                DateTime dateOut = dateTimePickerOUT.Value;
+
+                // date in must be = or > today date
+                // date out must be = or > date in
+                if(DateTime.Compare(dateIn.Date,DateTime.Now.Date) < 0)
+                {
+                    MessageBox.Show("The Date In Must Be = or > To Today Date", "Invalid Date In", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                else if(DateTime.Compare(dateOut.Date, dateIn.Date) < 0)
+                {
+                    MessageBox.Show("The Date Out Must Be = or > To Date In", "Invalid Date Out", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                else
+                {
+                    if (reservation.addReservation(roomNumber, clientID, dateIn, dateOut))
+                    {
+                        // set the room free column to NO
+                        // you can add a message if the room is edited
+                        room.setRoomFree(roomNumber,"No");
+                        dataGridView1.DataSource = reservation.getAllReserv();
+                        MessageBox.Show("New Reservation Added", "Add Reservation", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Reservation NOT Added", "Add Reservation", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Add Reservation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            
+        }
+
+- Edit The Selected Reservation Button
+
+        private void buttonEditReserv_Click(object sender, EventArgs e)
+        {
+
+            try
+            {
+                int rservID = Convert.ToInt32(textBoxReservId.Text);
+                int clientID = Convert.ToInt32(textBoxClientID.Text);
+                int roomNumber = Convert.ToInt32(dataGridView1.CurrentRow.Cells[1].Value.ToString());
+                DateTime dateIn = dateTimePickerIN.Value;
+                DateTime dateOut = dateTimePickerOUT.Value;
+
+                // date in must be = or > today date
+                // date out must be = or > date in
+                if (dateIn < DateTime.Now)
+                {
+                    MessageBox.Show("The Date In Must Be = or > To Today Date", "Invalid Date In", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                else if (dateOut < dateIn)
+                {
+                    MessageBox.Show("The Date Out Must Be = or > To Date In", "Invalid Date Out", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                else
+                {
+                    //rservId
+                    if (reservation.editReserv(rservID,roomNumber, clientID, dateIn, dateOut))
+                    {
+                        // set the room free column to NO
+                        // you can add a message if the room is edited
+                        room.setRoomFree(roomNumber,"No");
+                        dataGridView1.DataSource = reservation.getAllReserv();
+                        MessageBox.Show("Reservation Data Updated", "Edit Reservation", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Reservation NOT Added", "Add Reservation", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Add Reservation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
+
+- Remove The Selected Reservation Button
+
+private void buttonRemoveReserv_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int reservId = Convert.ToInt32(textBoxReservId.Text);
+                int roomNumber = Convert.ToInt32(dataGridView1.CurrentRow.Cells[1].Value.ToString());
+                if(reservation.removeReserv(reservId))
+                {
+                    dataGridView1.DataSource = reservation.getAllReserv();
+                    // after deleting a reservation we need to set free column to 'Yes'
+
+                    room.setRoomFree(roomNumber, "Yes");
+                    MessageBox.Show("Reservation Deleted", "Delete Reservation", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Delete Reservation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+
+
